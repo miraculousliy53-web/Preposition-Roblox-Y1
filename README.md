@@ -1,1 +1,1157 @@
-# Preposition-Roblox-Y1
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ROBLOX PREPOSITION OBBY: ANIMAL HOUSE QUEST</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Fredoka for Roblox look -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CRITICAL MOBILE SCROLL FIX: Allow natural vertical page scrolling */
+        html, body {
+            min-height: 100%;
+            height: auto !important;
+            overflow-x: hidden;
+            overflow-y: auto !important;
+            font-family: 'Fredoka', cursive, sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #0f172a;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed 3D canvas background that NEVER blocks touch scrolling */
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none !important;
+        }
+
+        /* Roblox style panels and dynamic shadows */
+        .roblox-panel {
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            border: 4px solid #38bdf8;
+            box-shadow: 0 8px 0 #0284c7, 0 15px 25px rgba(0,0,0,0.5);
+            border-radius: 20px;
+        }
+
+        .roblox-btn {
+            box-shadow: 0 6px 0 #15803d;
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+        }
+        .roblox-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #15803d;
+        }
+
+        .roblox-btn-blue {
+            box-shadow: 0 6px 0 #0369a1;
+            touch-action: manipulation;
+        }
+        .roblox-btn-blue:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0369a1;
+        }
+
+        .roblox-btn-yellow {
+            box-shadow: 0 6px 0 #b45309;
+            touch-action: manipulation;
+        }
+        .roblox-btn-yellow:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b45309;
+        }
+
+        .tile-btn {
+            box-shadow: 0 5px 0 #475569;
+            transition: transform 0.15s, box-shadow 0.15s;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        .tile-btn:active, .tile-btn.selected {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #475569;
+        }
+
+        /* Confetti Canvas overlay */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #38bdf8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between relative">
+
+    <!-- 3D Roblox Obby Canvas (Passes touch events through to standard page scroll) -->
+    <canvas id="three-canvas"></canvas>
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Top Sticky Header -->
+    <header class="relative z-20 w-full p-2 md:p-4 flex justify-between items-center bg-slate-900/90 border-b-4 border-cyan-500 sticky top-0 shadow-lg">
+        <div class="flex items-center gap-2">
+            <span class="bg-yellow-400 text-slate-950 font-bold px-3 py-1 rounded-full text-xs md:text-sm border-2 border-yellow-600 shadow-md">
+                <i class="fa-solid fa-user mr-1"></i> <span id="display-player-name">Player</span>
+            </span>
+            <span class="bg-emerald-500 text-white font-bold px-3 py-1 rounded-full text-xs md:text-sm border-2 border-emerald-700 shadow-md">
+                <i class="fa-solid fa-star mr-1"></i> <span id="display-score">0</span> / 180
+            </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="sound-btn" onclick="toggleSound()" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 md:px-3 md:py-1 rounded-xl border-2 border-indigo-400 font-bold text-xs md:text-sm shadow-md">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <button id="guide-btn" onclick="openGuide()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-2.5 py-1 rounded-xl border-2 border-cyan-400 font-bold text-xs md:text-sm shadow-md">
+                <i class="fa-solid fa-book-open mr-1"></i> Guide
+            </button>
+            <button id="restart-btn" onclick="confirmRestart()" class="bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1 rounded-xl border-2 border-rose-400 font-bold text-xs md:text-sm shadow-md">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN SCROLLABLE UI CONTENT CONTAINER -->
+    <main class="relative z-10 flex-1 flex flex-col justify-center items-center p-3 md:p-6 max-w-4xl mx-auto w-full my-auto py-6">
+
+        <!-- START SCREEN -->
+        <div id="start-screen" class="roblox-panel p-5 md:p-8 w-full text-center flex flex-col items-center gap-4 my-auto">
+            <div class="bg-cyan-500 text-slate-950 px-4 py-1 rounded-full text-xs md:text-sm font-bold tracking-wider uppercase">
+                Roblox Obby Edition
+            </div>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-pink-500 drop-shadow-md">
+                ROBLOX PREPOSITION OBBY
+            </h1>
+            <h2 class="text-xl md:text-2xl text-cyan-300 font-bold">
+                ANIMAL HOUSE QUEST
+            </h2>
+            <p class="text-sm md:text-lg text-slate-200 bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                🐾 Help the animals find their places! <br>
+                <span class="text-yellow-300 text-xs md:text-base">Arrange the words to make a sentence! Earn up to 180 points!</span>
+            </p>
+
+            <div class="w-full max-w-sm mt-1">
+                <label for="player-name-input" class="block text-cyan-300 text-sm font-bold mb-1">Enter Your Name:</label>
+                <input type="text" id="player-name-input" placeholder="e.g. Aiman" maxlength="12"
+                       class="w-full text-center text-xl font-bold bg-slate-800 border-4 border-cyan-400 text-white rounded-2xl py-2.5 px-4 focus:outline-none focus:border-yellow-400 transition-colors shadow-inner">
+                <p id="name-error" class="text-rose-400 text-sm font-bold mt-2 hidden">Please enter your name to start!</p>
+            </div>
+
+            <div class="flex items-center gap-2 text-slate-300 text-xs md:text-sm bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700">
+                <i class="fa-solid fa-hand-pointer text-yellow-400 animate-bounce"></i>
+                <span>Use your finger to tap and play! Scroll up/down anytime!</span>
+            </div>
+
+            <button onclick="startGame()" class="roblox-btn bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xl md:text-2xl py-3.5 px-8 rounded-2xl border-2 border-emerald-300 mt-2 w-full max-w-sm">
+                START GAME <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- GAMEPLAY SCREEN -->
+        <div id="game-screen" class="w-full flex-col gap-4 hidden my-auto">
+            
+            <!-- Progress Matrix Header -->
+            <div class="roblox-panel p-3">
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <span class="text-xs md:text-sm font-bold text-cyan-300">
+                        Checkpoints: <span id="completed-count" class="text-yellow-300">0/18</span>
+                    </span>
+                    <div class="flex gap-3 text-xs">
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block border border-white"></span> Correct</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block border border-white"></span> Incomplete</span>
+                    </div>
+                </div>
+                
+                <!-- 18 Indicators Matrix -->
+                <div id="progress-matrix" class="grid grid-cols-6 sm:grid-cols-9 gap-1.5 md:gap-2">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Challenge Workspace Panel -->
+            <div class="roblox-panel p-4 flex flex-col md:flex-row gap-4 items-center">
+                
+                <!-- Visual Illustration Canvas -->
+                <div class="w-full md:w-1/2 flex flex-col items-center justify-center bg-slate-800/90 rounded-2xl p-3 border-2 border-slate-700">
+                    <div class="relative w-full aspect-4/3 max-h-56 bg-slate-900 rounded-xl overflow-hidden border-2 border-cyan-500/50 flex items-center justify-center">
+                        <canvas id="illustration-canvas" width="320" height="240" class="w-full h-full object-contain"></canvas>
+                        
+                        <!-- Speech Bubble Hint -->
+                        <div id="speech-bubble" class="absolute top-2 right-2 left-2 bg-yellow-300 text-slate-900 p-2.5 rounded-2xl border-2 border-yellow-500 text-xs md:text-sm font-bold hidden shadow-lg animate-fade-in">
+                            <i class="fa-solid fa-lightbulb text-orange-600 mr-1"></i>
+                            <span id="speech-text">Hint goes here!</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-cyan-200 font-semibold text-center">
+                        Level <span id="current-level-num">1</span> of 18
+                    </div>
+                </div>
+
+                <!-- Word Rearrange Workspace -->
+                <div class="w-full md:w-1/2 flex flex-col gap-3">
+                    
+                    <div class="text-xs md:text-sm text-center md:text-left text-slate-300 font-bold">
+                        Tap words to form the correct sentence:
+                    </div>
+
+                    <!-- Target Answer Slot Container -->
+                    <div id="answer-zone" class="min-h-[64px] p-2 bg-slate-950/80 rounded-2xl border-2 border-dashed border-cyan-400 flex flex-wrap gap-1.5 items-center justify-center transition-all">
+                        <span id="answer-placeholder" class="text-slate-500 text-xs italic">Tap word tiles below to build sentence...</span>
+                    </div>
+
+                    <!-- Scrambled Tiles Pool -->
+                    <div id="scrambled-zone" class="min-h-[64px] p-2 bg-slate-800/60 rounded-2xl border border-slate-700 flex flex-wrap gap-1.5 items-center justify-center">
+                        <!-- Tiles generated dynamically -->
+                    </div>
+
+                    <!-- Feedback Alert Message -->
+                    <div id="feedback-message" class="text-center font-bold text-sm py-2 px-3 rounded-xl hidden"></div>
+
+                    <!-- Action Control Buttons -->
+                    <div class="grid grid-cols-3 gap-2 mt-1">
+                        <button onclick="clearAnswer()" class="tile-btn bg-slate-700 hover:bg-slate-600 text-white text-xs md:text-sm font-bold py-2.5 px-2 rounded-xl border border-slate-500 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eraser"></i> Clear
+                        </button>
+                        <button onclick="showHint()" class="roblox-btn-yellow bg-amber-500 hover:bg-amber-400 text-white text-xs md:text-sm font-bold py-2.5 px-2 rounded-xl border border-amber-300 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-lightbulb"></i> Hint
+                        </button>
+                        <button onclick="submitAnswer()" class="roblox-btn bg-emerald-500 hover:bg-emerald-400 text-white text-xs md:text-sm font-extrabold py-2.5 px-2 rounded-xl border border-emerald-300 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-check"></i> Submit
+                        </button>
+                    </div>
+
+                    <button id="next-btn" onclick="nextLevel()" class="roblox-btn-blue bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-base py-2.5 px-4 rounded-xl border border-cyan-200 mt-1 flex items-center justify-center gap-2 hidden animate-pulse">
+                        Next Level <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- GUIDE / TEACHER REFERENCE MODAL -->
+        <div id="guide-modal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+            <div class="roblox-panel p-6 max-w-lg w-full text-slate-100 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <h3 class="text-xl font-bold text-cyan-300"><i class="fa-solid fa-book mr-2"></i> Grammar Guide</h3>
+                    <button onclick="closeGuide()" class="text-slate-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="space-y-3 text-sm">
+                    <p class="font-bold text-yellow-300">Sentence Structure:</p>
+                    <div class="bg-slate-800 p-3 rounded-xl font-mono text-center text-cyan-200 border border-slate-700">
+                        The + [animal] + is + [preposition] + the + [place].
+                    </div>
+                    <div class="space-y-2 mt-2">
+                        <div class="bg-slate-800/80 p-2.5 rounded-xl border-l-4 border-emerald-400">
+                            <strong class="text-emerald-400">ON:</strong> The animal is on top of the object.<br>
+                            <span class="text-xs text-slate-400">e.g. The cat is <u>on</u> the box.</span>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-xl border-l-4 border-cyan-400">
+                            <strong class="text-cyan-400">IN:</strong> The animal is inside the object.<br>
+                            <span class="text-xs text-slate-400">e.g. The rat is <u>in</u> the box.</span>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-xl border-l-4 border-yellow-400">
+                            <strong class="text-yellow-400">UNDER:</strong> The animal is below the object.<br>
+                            <span class="text-xs text-slate-400">e.g. The dog is <u>under</u> the chair.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="closeGuide()" class="roblox-btn bg-cyan-500 text-slate-950 font-bold py-2 rounded-xl mt-2">
+                    Got it!
+                </button>
+            </div>
+        </div>
+
+        <!-- FINISH CELEBRATION SCREEN -->
+        <div id="finish-screen" class="roblox-panel p-6 md:p-8 w-full text-center flex flex-col items-center gap-4 hidden my-auto">
+            <div class="text-yellow-400 text-5xl md:text-6xl font-extrabold animate-bounce">
+                🏆
+            </div>
+            <h2 class="text-2xl md:text-4xl font-extrabold text-cyan-300">
+                CONGRATULATIONS, <span id="finish-player-name" class="text-yellow-300">PLAYER</span>!
+            </h2>
+            <p class="text-base md:text-xl text-emerald-400 font-bold">
+                You completed Animal House Quest!
+            </p>
+
+            <!-- Star Rating -->
+            <div id="star-rating" class="flex gap-2 text-4xl md:text-5xl my-1">
+                <i class="fa-solid fa-star text-yellow-400"></i>
+                <i class="fa-solid fa-star text-yellow-400"></i>
+                <i class="fa-solid fa-star text-yellow-400"></i>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 w-full max-w-md bg-slate-800/80 p-4 rounded-2xl border border-slate-700 text-sm md:text-base">
+                <div>
+                    <span class="text-slate-400 block text-xs">FINAL SCORE</span>
+                    <strong id="final-score" class="text-2xl text-emerald-400">180</strong> / 180
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs">QUESTIONS</span>
+                    <strong class="text-2xl text-cyan-300">18 / 18</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs">HINTS USED</span>
+                    <strong id="final-hints" class="text-xl text-yellow-300">0</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs">ACCURACY</span>
+                    <strong id="final-accuracy" class="text-xl text-pink-400">100%</strong>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
+                <button onclick="toggleReviewScreen()" class="roblox-btn-blue bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 px-4 rounded-xl flex-1 border border-cyan-200 text-sm">
+                    <i class="fa-solid fa-list-check mr-1"></i> Review Answers
+                </button>
+                <button onclick="restartGame()" class="roblox-btn bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 px-4 rounded-xl flex-1 border border-emerald-300 text-sm">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Play Again
+                </button>
+            </div>
+
+            <!-- REVIEW ANSWERS CONTAINER -->
+            <div id="review-container" class="w-full max-w-md bg-slate-900 p-4 rounded-2xl border-2 border-slate-700 text-left mt-2 hidden">
+                <h4 class="text-lg font-bold text-yellow-300 mb-3 text-center border-b border-slate-700 pb-2">
+                    All 18 Correct Sentences:
+                </h4>
+                <ol id="review-list" class="space-y-2 text-xs md:text-sm text-slate-200 list-decimal list-inside max-h-56 overflow-y-auto">
+                    <!-- Populated dynamically -->
+                </ol>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Tagline -->
+    <footer class="relative z-10 w-full py-2.5 text-center text-xs text-slate-400 bg-slate-950/90 border-t border-slate-800">
+        Primary Year 1 ESL Learning Game • Animal House Quest
+    </footer>
+
+    <script>
+        /* 
+           ================================================================
+           GAME DATA & EXACT 18 QUESTIONS DATASET
+           ================================================================
+        */
+        const QUESTIONS = [
+            { id: 1, scramble: ["box", "the", "on", "cat", "the", "is"], answer: "The cat is on the box.", animal: "cat", prep: "on", place: "box" },
+            { id: 2, scramble: ["rat", "the", "in", "the", "box", "is"], answer: "The rat is in the box.", animal: "rat", prep: "in", place: "box" },
+            { id: 3, scramble: ["under", "chair", "the", "dog", "the", "is"], answer: "The dog is under the chair.", animal: "dog", prep: "under", place: "chair" },
+            { id: 4, scramble: ["tree", "the", "on", "frog", "the", "is"], answer: "The frog is on the tree.", animal: "frog", prep: "on", place: "tree" },
+            { id: 5, scramble: ["hat", "the", "in", "spider", "the", "is"], answer: "The spider is in the hat.", animal: "spider", prep: "in", place: "hat" },
+            { id: 6, scramble: ["pencil case", "the", "under", "lizard", "the", "is"], answer: "The lizard is under the pencil case.", animal: "lizard", prep: "under", place: "pencil case" },
+            { id: 7, scramble: ["book", "the", "on", "rat", "the", "is"], answer: "The rat is on the book.", animal: "rat", prep: "on", place: "book" },
+            { id: 8, scramble: ["chair", "the", "in", "cat", "the", "is"], answer: "The cat is in the chair.", animal: "cat", prep: "in", place: "chair" },
+            { id: 9, scramble: ["box", "the", "under", "frog", "the", "is"], answer: "The frog is under the box.", animal: "frog", prep: "under", place: "box" },
+            { id: 10, scramble: ["hat", "the", "on", "dog", "the", "is"], answer: "The dog is on the hat.", animal: "dog", prep: "on", place: "hat" },
+            { id: 11, scramble: ["tree", "the", "under", "spider", "the", "is"], answer: "The spider is under the tree.", animal: "spider", prep: "under", place: "tree" },
+            { id: 12, scramble: ["pencil case", "the", "in", "lizard", "the", "is"], answer: "The lizard is in the pencil case.", animal: "lizard", prep: "in", place: "pencil case" },
+            { id: 13, scramble: ["box", "the", "on", "spider", "the", "is"], answer: "The spider is on the box.", animal: "spider", prep: "on", place: "box" },
+            { id: 14, scramble: ["book", "the", "under", "cat", "the", "is"], answer: "The cat is under the book.", animal: "cat", prep: "under", place: "book" },
+            { id: 15, scramble: ["chair", "the", "on", "frog", "the", "is"], answer: "The frog is on the chair.", animal: "frog", prep: "on", place: "chair" },
+            { id: 16, scramble: ["hat", "the", "under", "rat", "the", "is"], answer: "The rat is under the hat.", animal: "rat", prep: "under", place: "hat" },
+            { id: 17, scramble: ["tree", "the", "in", "dog", "the", "is"], answer: "The dog is in the tree.", animal: "dog", prep: "in", place: "tree" },
+            { id: 18, scramble: ["book", "the", "in", "lizard", "the", "is"], answer: "The lizard is in the book.", animal: "lizard", prep: "in", place: "book" }
+        ];
+
+        // State Tracking Variables
+        let playerName = "";
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let totalHintsUsed = 0;
+        let soundEnabled = true;
+        let questionStates = Array(18).fill().map(() => ({
+            completed: false,
+            attempts: 0,
+            hintUsed: false
+        }));
+        let selectedTiles = [];
+
+        // Web Audio Synthesizer
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(180, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        g.gain.setValueAtTime(0.2, now + idx * 0.1);
+                        g.gain.linearRampToValueAtTime(0.01, now + idx * 0.1 + 0.3);
+                        o.start(now + idx * 0.1);
+                        o.stop(now + idx * 0.1 + 0.3);
+                    });
+                }
+            } catch(e) {
+                console.log("Audio exception:", e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const btn = document.getElementById('sound-btn');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                btn.classList.remove('opacity-50');
+                playSound('click');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+                btn.classList.add('opacity-50');
+            }
+        }
+
+        // THREE.JS 3D BACKGROUND WORLD
+        let scene, camera, renderer, playerMesh, checkpoints3D = [];
+
+        function initThreeJS() {
+            const canvas = document.getElementById('three-canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.FogExp2(0x0f172a, 0.015);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Lighting setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(20, 40, 20);
+            scene.add(dirLight);
+
+            // Floating Obby Platforms
+            const colors = [0xef4444, 0xf97316, 0xf59e0b, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899];
+
+            createPlatform(0, 0, 0, 6, 6, 0x38bdf8);
+
+            for (let i = 1; i <= 18; i++) {
+                const angle = i * 0.4;
+                const radius = 8 + i * 2.5;
+                const x = Math.cos(angle) * radius;
+                const z = -Math.sin(angle) * radius;
+                const y = i * 0.8;
+                const color = colors[i % colors.length];
+
+                createPlatform(x, y, z, 4, 4, color);
+                checkpoints3D.push({ x, y: y + 1.2, z });
+            }
+
+            const lastCp = checkpoints3D[17];
+            createPlatform(lastCp.x + 5, lastCp.y + 1, lastCp.z - 5, 8, 8, 0xeab308);
+
+            // Blocky Roblox Avatar
+            playerMesh = createBlockyAvatar();
+            playerMesh.position.set(0, 1.2, 0);
+            scene.add(playerMesh);
+
+            updateCameraPosition();
+            window.addEventListener('resize', onWindowResize);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (playerMesh) {
+                    playerMesh.position.y += Math.sin(Date.now() * 0.003) * 0.003;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        function createPlatform(x, y, z, width, depth, color) {
+            const geo = new THREE.BoxGeometry(width, 1, depth);
+            const mat = new THREE.MeshLambertMaterial({ color: color });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+            const line = new THREE.LineSegments(edges, lineMat);
+            mesh.add(line);
+
+            return mesh;
+        }
+
+        function createBlockyAvatar() {
+            const group = new THREE.Group();
+
+            // Head
+            const headGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const headMat = new THREE.MeshLambertMaterial({ color: 0xfacc15 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 1.3;
+            group.add(head);
+
+            // Torso
+            const torsoGeo = new THREE.BoxGeometry(1, 1.2, 0.6);
+            const torsoMat = new THREE.MeshLambertMaterial({ color: 0x0284c7 });
+            const torso = new THREE.Mesh(torsoGeo, torsoMat);
+            torso.position.y = 0.3;
+            group.add(torso);
+
+            // Legs
+            const legGeo = new THREE.BoxGeometry(0.4, 0.8, 0.5);
+            const legMat = new THREE.MeshLambertMaterial({ color: 0x16a34a });
+            
+            const leftLeg = new THREE.Mesh(legGeo, legMat);
+            leftLeg.position.set(-0.25, -0.6, 0);
+            group.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeo, legMat);
+            rightLeg.position.set(0.25, -0.6, 0);
+            group.add(rightLeg);
+
+            return group;
+        }
+
+        function updateCameraPosition() {
+            if (!playerMesh) return;
+            camera.position.set(playerMesh.position.x + 8, playerMesh.position.y + 8, playerMesh.position.z + 12);
+            camera.lookAt(playerMesh.position);
+        }
+
+        function moveAvatarToCheckpoint(idx) {
+            if (!playerMesh || idx < 0 || idx >= checkpoints3D.length) return;
+            const target = checkpoints3D[idx];
+            
+            const startPos = playerMesh.position.clone();
+            const endPos = new THREE.Vector3(target.x, target.y, target.z);
+            let progress = 0;
+
+            function jumpStep() {
+                progress += 0.05;
+                if (progress <= 1) {
+                    playerMesh.position.lerpVectors(startPos, endPos, progress);
+                    playerMesh.position.y += Math.sin(progress * Math.PI) * 2;
+                    updateCameraPosition();
+                    requestAnimationFrame(jumpStep);
+                } else {
+                    playerMesh.position.copy(endPos);
+                    updateCameraPosition();
+                }
+            }
+            jumpStep();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Dynamic 2D Preposition Canvas Illustrations
+        function drawIllustration(q) {
+            const canvas = document.getElementById('illustration-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bgGrad.addColorStop(0, '#1e293b');
+            bgGrad.addColorStop(1, '#0f172a');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(20, 200);
+            ctx.lineTo(300, 200);
+            ctx.stroke();
+
+            let objX = 160, objY = 150;
+            let animX = 160, animY = 150;
+
+            if (q.prep === 'on') {
+                animY = objY - 45;
+            } else if (q.prep === 'in') {
+                animY = objY + 5;
+            } else if (q.prep === 'under') {
+                animY = objY + 40;
+                objY = 120;
+            }
+
+            if (q.prep === 'under') {
+                drawAnimal(ctx, q.animal, animX, animY);
+                drawPlaceObject(ctx, q.place, objX, objY);
+            } else if (q.prep === 'in') {
+                drawPlaceObjectBack(ctx, q.place, objX, objY);
+                drawAnimal(ctx, q.animal, animX, animY);
+                drawPlaceObjectFront(ctx, q.place, objX, objY);
+            } else {
+                drawPlaceObject(ctx, q.place, objX, objY);
+                drawAnimal(ctx, q.animal, animX, animY);
+            }
+        }
+
+        function drawPlaceObject(ctx, place, x, y) {
+            drawPlaceObjectBack(ctx, place, x, y);
+            drawPlaceObjectFront(ctx, place, x, y);
+        }
+
+        function drawPlaceObjectBack(ctx, place, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (place === 'box') {
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(-45, -30, 90, 60);
+            } else if (place === 'chair') {
+                ctx.fillStyle = '#854d0e';
+                ctx.fillRect(-35, -10, 70, 12);
+                ctx.fillRect(-30, 2, 8, 45);
+                ctx.fillRect(22, 2, 8, 45);
+                ctx.fillRect(-30, -50, 8, 40);
+                ctx.fillRect(22, -50, 8, 40);
+                ctx.fillRect(-30, -50, 60, 10);
+            } else if (place === 'hat') {
+                ctx.fillStyle = '#1e1b4b';
+                ctx.beginPath();
+                ctx.arc(0, 0, 30, Math.PI, 0);
+                ctx.fill();
+            } else if (place === 'tree') {
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(-15, -20, 30, 70);
+                ctx.fillStyle = '#15803d';
+                ctx.beginPath();
+                ctx.arc(0, -45, 45, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (place === 'book') {
+                ctx.fillStyle = '#0284c7';
+                ctx.fillRect(-50, -10, 100, 20);
+            } else if (place === 'pencil case') {
+                ctx.fillStyle = '#0d9488';
+                ctx.fillRect(-45, -20, 90, 40);
+            }
+
+            ctx.restore();
+        }
+
+        function drawPlaceObjectFront(ctx, place, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (place === 'box') {
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(-45, -30, 90, 60);
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(-48, -32, 96, 10);
+            } else if (place === 'hat') {
+                ctx.fillStyle = '#312e81';
+                ctx.beginPath();
+                ctx.ellipse(0, 2, 50, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (place === 'book') {
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(-46, -6, 92, 12);
+            } else if (place === 'pencil case') {
+                ctx.fillStyle = '#14b8a6';
+                ctx.fillRect(-45, -5, 90, 10);
+            }
+
+            ctx.restore();
+        }
+
+        function drawAnimal(ctx, animal, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (animal === 'cat') {
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(-18, -18, 36, 30);
+                ctx.beginPath();
+                ctx.moveTo(-18, -18); ctx.lineTo(-10, -28); ctx.lineTo(-2, -18);
+                ctx.moveTo(18, -18); ctx.lineTo(10, -28); ctx.lineTo(2, -18);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-12, -10, 8, 8); ctx.fillRect(4, -10, 8, 8);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(-10, -8, 4, 4); ctx.fillRect(6, -8, 4, 4);
+            } else if (animal === 'rat') {
+                ctx.fillStyle = '#64748b';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 22, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#f472b6';
+                ctx.beginPath();
+                ctx.arc(-10, -10, 6, 0, Math.PI * 2);
+                ctx.arc(10, -10, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#e11d48';
+                ctx.fillRect(-3, 6, 6, 4);
+            } else if (animal === 'frog') {
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(-20, -14, 40, 26);
+                ctx.beginPath();
+                ctx.arc(-10, -14, 8, 0, Math.PI * 2);
+                ctx.arc(10, -14, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-12, -16, 5, 5); ctx.fillRect(8, -16, 5, 5);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(-10, -15, 2, 2); ctx.fillRect(10, -15, 2, 2);
+            } else if (animal === 'dog') {
+                ctx.fillStyle = '#a16207';
+                ctx.fillRect(-20, -16, 40, 32);
+                ctx.fillStyle = '#713f12';
+                ctx.fillRect(-26, -16, 8, 20); ctx.fillRect(18, -16, 8, 20);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(-8, -2, 16, 12);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(-4, -2, 8, 5);
+            } else if (animal === 'spider') {
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(0, 0, 16, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 3;
+                for (let i = -1; i <= 1; i += 0.6) {
+                    ctx.beginPath();
+                    ctx.moveTo(-10, i * 8); ctx.lineTo(-28, i * 12);
+                    ctx.moveTo(10, i * 8); ctx.lineTo(28, i * 12);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(-6, -4, 4, 4); ctx.fillRect(2, -4, 4, 4);
+            } else if (animal === 'lizard') {
+                ctx.fillStyle = '#06b6d4';
+                ctx.fillRect(-25, -8, 50, 16);
+                ctx.beginPath();
+                ctx.moveTo(25, -4); ctx.lineTo(40, -12); ctx.lineTo(25, 4);
+                ctx.fill();
+                ctx.fillRect(-20, -14, 6, 8); ctx.fillRect(14, -14, 6, 8);
+                ctx.fillRect(-20, 6, 6, 8); ctx.fillRect(14, 6, 6, 8);
+            }
+
+            ctx.restore();
+        }
+
+        // GAME FLOW & QUESTION LOGIC
+        function startGame() {
+            const input = document.getElementById('player-name-input');
+            const name = input.value.trim();
+            const nameError = document.getElementById('name-error');
+
+            if (!name) {
+                nameError.classList.remove('hidden');
+                playSound('wrong');
+                return;
+            }
+
+            nameError.classList.add('hidden');
+            playerName = name;
+            document.getElementById('display-player-name').innerText = playerName;
+            
+            playSound('click');
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('flex');
+
+            renderProgressMatrix();
+            loadQuestion(0);
+        }
+
+        function renderProgressMatrix() {
+            const container = document.getElementById('progress-matrix');
+            container.innerHTML = '';
+
+            QUESTIONS.forEach((q, idx) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => jumpToQuestion(idx);
+                btn.className = `h-9 w-full rounded-xl font-extrabold text-xs flex items-center justify-center border-2 transition-all shadow-sm ${
+                    idx === currentQuestionIdx ? 'ring-4 ring-yellow-400 scale-105 z-10' : ''
+                }`;
+
+                const state = questionStates[idx];
+                if (state.completed) {
+                    btn.classList.add('bg-emerald-500', 'border-emerald-300', 'text-white');
+                    btn.innerHTML = `${idx + 1} <i class="fa-solid fa-check ml-0.5 text-[10px]"></i>`;
+                } else {
+                    btn.classList.add('bg-rose-600', 'border-rose-400', 'text-white');
+                    btn.innerHTML = `${idx + 1} <i class="fa-solid fa-xmark ml-0.5 text-[10px]"></i>`;
+                }
+
+                container.appendChild(btn);
+            });
+
+            const completedTotal = questionStates.filter(s => s.completed).length;
+            document.getElementById('completed-count').innerText = `${completedTotal}/18`;
+        }
+
+        function jumpToQuestion(idx) {
+            playSound('click');
+            loadQuestion(idx);
+        }
+
+        function loadQuestion(idx) {
+            currentQuestionIdx = idx;
+            selectedTiles = [];
+            
+            document.getElementById('current-level-num').innerText = idx + 1;
+            document.getElementById('speech-bubble').classList.add('hidden');
+            document.getElementById('feedback-message').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const q = QUESTIONS[idx];
+
+            drawIllustration(q);
+            moveAvatarToCheckpoint(idx);
+
+            renderTiles(q);
+            renderAnswerZone();
+            renderProgressMatrix();
+        }
+
+        function renderTiles(q) {
+            const pool = document.getElementById('scrambled-zone');
+            pool.innerHTML = '';
+
+            let tilesToRender = [...q.scramble];
+            
+            for (let i = tilesToRender.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [tilesToRender[i], tilesToRender[j]] = [tilesToRender[j], tilesToRender[i]];
+            }
+
+            tilesToRender.forEach((word, tileIdx) => {
+                const tileBtn = document.createElement('button');
+                tileBtn.className = 'tile-btn bg-slate-700 hover:bg-slate-600 border-2 border-slate-400 text-white font-bold py-2 px-3 rounded-xl text-sm md:text-base capitalize shadow';
+                tileBtn.innerText = word;
+                tileBtn.id = `tile-pool-${tileIdx}`;
+                tileBtn.onclick = () => selectTile(word, tileBtn);
+                pool.appendChild(tileBtn);
+            });
+        }
+
+        function selectTile(word, btnEl) {
+            if (btnEl.classList.contains('opacity-20')) return;
+            playSound('click');
+            
+            selectedTiles.push({ word: word, refBtn: btnEl });
+            btnEl.classList.add('opacity-20', 'pointer-events-none');
+            
+            renderAnswerZone();
+        }
+
+        function deselectTile(index) {
+            playSound('click');
+            const removed = selectedTiles.splice(index, 1)[0];
+            if (removed && removed.refBtn) {
+                removed.refBtn.classList.remove('opacity-20', 'pointer-events-none');
+            }
+            renderAnswerZone();
+        }
+
+        function renderAnswerZone() {
+            const zone = document.getElementById('answer-zone');
+            zone.innerHTML = '';
+
+            if (selectedTiles.length === 0) {
+                zone.innerHTML = `<span id="answer-placeholder" class="text-slate-500 text-xs italic">Tap word tiles below to build sentence...</span>`;
+                return;
+            }
+
+            selectedTiles.forEach((tileObj, idx) => {
+                const tileBtn = document.createElement('button');
+                tileBtn.className = 'tile-btn bg-cyan-600 hover:bg-cyan-500 border-2 border-cyan-300 text-white font-bold py-2 px-3 rounded-xl text-sm md:text-base shadow';
+                
+                if (idx === 0) {
+                    tileBtn.innerText = tileObj.word.charAt(0).toUpperCase() + tileObj.word.slice(1);
+                } else {
+                    tileBtn.innerText = tileObj.word;
+                }
+
+                tileBtn.onclick = () => deselectTile(idx);
+                zone.appendChild(tileBtn);
+            });
+        }
+
+        function clearAnswer() {
+            playSound('click');
+            selectedTiles.forEach(t => {
+                if (t.refBtn) t.refBtn.classList.remove('opacity-20', 'pointer-events-none');
+            });
+            selectedTiles = [];
+            renderAnswerZone();
+        }
+
+        function showHint() {
+            playSound('click');
+            const q = QUESTIONS[currentQuestionIdx];
+            questionStates[currentQuestionIdx].hintUsed = true;
+            totalHintsUsed++;
+
+            const bubble = document.getElementById('speech-bubble');
+            const speechText = document.getElementById('speech-text');
+
+            let hintText = "";
+            if (q.prep === 'on') hintText = "ON: The animal is on top of the object.";
+            else if (q.prep === 'in') hintText = "IN: The animal is inside the object.";
+            else if (q.prep === 'under') hintText = "UNDER: The animal is below the object.";
+
+            speechText.innerText = hintText;
+            bubble.classList.remove('hidden');
+
+            const poolBtns = document.getElementById('scrambled-zone').children;
+            for (let btn of poolBtns) {
+                if (btn.innerText.toLowerCase() === q.prep) {
+                    btn.classList.add('ring-4', 'ring-yellow-400', 'animate-bounce');
+                    setTimeout(() => btn.classList.remove('ring-4', 'ring-yellow-400', 'animate-bounce'), 2500);
+                }
+            }
+        }
+
+        function submitAnswer() {
+            const q = QUESTIONS[currentQuestionIdx];
+            const currentState = questionStates[currentQuestionIdx];
+            currentState.attempts++;
+
+            let constructedSentence = selectedTiles.map(t => t.word.toLowerCase()).join(' ');
+            const normalizedUser = constructedSentence.trim().replaceAll(/\s+/g, ' ');
+            const normalizedTarget = q.answer.toLowerCase().replace('.', '').trim();
+
+            const feedback = document.getElementById('feedback-message');
+
+            if (normalizedUser === normalizedTarget) {
+                playSound('correct');
+
+                if (!currentState.completed) {
+                    currentState.completed = true;
+                    const points = (currentState.attempts === 1) ? 10 : 5;
+                    score += points;
+                    document.getElementById('display-score').innerText = score;
+                }
+
+                feedback.className = 'text-center font-bold text-sm py-2 px-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500';
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Amazing, ${playerName}! Correct answer!`;
+                feedback.classList.remove('hidden');
+
+                document.getElementById('next-btn').classList.remove('hidden');
+                renderProgressMatrix();
+
+                if (questionStates.every(s => s.completed)) {
+                    setTimeout(showFinishScreen, 1200);
+                }
+
+            } else {
+                playSound('wrong');
+                feedback.className = 'text-center font-bold text-sm py-2 px-3 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500';
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Not quite! Try again!`;
+                feedback.classList.remove('hidden');
+            }
+        }
+
+        function nextLevel() {
+            playSound('click');
+            if (currentQuestionIdx < 17) {
+                loadQuestion(currentQuestionIdx + 1);
+            } else {
+                showFinishScreen();
+            }
+        }
+
+        function showFinishScreen() {
+            playSound('win');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('finish-screen').classList.remove('hidden');
+            document.getElementById('finish-screen').classList.add('flex');
+
+            document.getElementById('finish-player-name').innerText = playerName;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-hints').innerText = totalHintsUsed;
+
+            const accuracy = Math.round((score / 180) * 100);
+            document.getElementById('final-accuracy').innerText = `${accuracy}%`;
+
+            const starContainer = document.getElementById('star-rating');
+            if (score >= 150) {
+                starContainer.innerHTML = `<i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i>`;
+            } else if (score >= 100) {
+                starContainer.innerHTML = `<i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-slate-600"></i>`;
+            } else {
+                starContainer.innerHTML = `<i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-slate-600"></i><i class="fa-solid fa-star text-slate-600"></i>`;
+            }
+
+            launchConfetti();
+        }
+
+        function toggleReviewScreen() {
+            playSound('click');
+            const container = document.getElementById('review-container');
+            const list = document.getElementById('review-list');
+            
+            if (container.classList.contains('hidden')) {
+                list.innerHTML = '';
+                QUESTIONS.forEach((q, i) => {
+                    const li = document.createElement('li');
+                    li.className = 'py-1 border-b border-slate-800';
+                    li.innerHTML = `<span class="text-cyan-300 font-bold">${i+1}.</span> ${q.answer}`;
+                    list.appendChild(li);
+                });
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#facc15', '#38bdf8', '#4ade80', '#f43f5e', '#a855f7'];
+
+            for (let i = 0; i < 120; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 4 + 2,
+                    velX: Math.random() * 2 - 1
+                });
+            }
+
+            let animationFrame;
+            function updateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    p.x += p.velX;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                    if (p.y > canvas.height) p.y = -20;
+                });
+                animationFrame = requestAnimationFrame(updateConfetti);
+            }
+            updateConfetti();
+
+            setTimeout(() => cancelAnimationFrame(animationFrame), 5000);
+        }
+
+        function openGuide() {
+            playSound('click');
+            document.getElementById('guide-modal').classList.remove('hidden');
+        }
+
+        function closeGuide() {
+            playSound('click');
+            document.getElementById('guide-modal').classList.add('hidden');
+        }
+
+        function confirmRestart() {
+            playSound('click');
+            if (confirm("Do you want to restart the game?")) {
+                restartGame();
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            totalHintsUsed = 0;
+            currentQuestionIdx = 0;
+            questionStates = Array(18).fill().map(() => ({ completed: false, attempts: 0, hintUsed: false }));
+
+            document.getElementById('display-score').innerText = '0';
+            document.getElementById('finish-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        window.onload = function() {
+            initThreeJS();
+        };
+    </script>
+</body>
+</html>
